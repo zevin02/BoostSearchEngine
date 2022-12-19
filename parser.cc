@@ -160,9 +160,8 @@ static bool ParseUrl(string file, string *url)
      string url_head="https://www.boost.org/doc/libs/1_80_0/doc/html";
      file.erase(0,strlen("data/input"));
      url_head+=file;
-     if(!n)
-     cout<<url_head<<endl;
-     n++;
+     *url=url_head;
+
      return true;
 }
 bool ParseHtml(const vector<string> &files_list, vector<DocInfo_t> *results)
@@ -195,6 +194,9 @@ bool ParseHtml(const vector<string> &files_list, vector<DocInfo_t> *results)
           {
                continue;
           }
+               if(!n)
+     cout<<doc.url<<endl;
+     n++;
           // 这些都完成了解析任务，当前文档的结构都在Doc中，
           results->push_back(doc);
      }
