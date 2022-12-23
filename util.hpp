@@ -2,6 +2,8 @@
 #include<string>
 #include<iostream>
 #include<fstream>
+#include<vector>
+#include<boost/algorithm/string.hpp>
 using namespace std;
 // static int n=0;
 namespace ns_util
@@ -27,6 +29,15 @@ namespace ns_util
 
             in.close();//关闭文件
             return true;
+        }
+    };
+    class StringUtil
+    {
+        public:
+        static void CutString(const string &target,vector<string> *out,string sep)
+        {
+            boost::split(*out,target,boost::is_any_of(sep),boost::token_compress_on);//压缩中间的分隔符,把所有的压缩成一个\3
+            
         }
     };
 };

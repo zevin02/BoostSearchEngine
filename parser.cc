@@ -157,7 +157,7 @@ static bool ParseUrl(string file, string *url)
      //url_head=https://www.boost.org/doc/libs/1_80_0/doc/html
      //url_tail=/accumulators.html
      //url=url_head+url_tail,这样就形成了一个官网链接
-     string url_head="https://www.boost.org/doc/libs/1_80_0/doc/html";
+     string url_head="https://www.boost.org/doc/libs/1_80_0/doc/html";//内置的官网链接
      file.erase(0,strlen("data/input"));
      url_head+=file;
      *url=url_head;
@@ -195,14 +195,38 @@ bool ParseHtml(const vector<string> &files_list, vector<DocInfo_t> *results)
                continue;
           }
                if(!n)
-     cout<<doc.url<<endl;
-     n++;
+
           // 这些都完成了解析任务，当前文档的结构都在Doc中，
-          results->push_back(doc);
+          results->push_back(move(doc));//右值引用，避免拷贝
      }
      return true;
 }
 bool SaveHtml(const vector<DocInfo_t> &result, const string &output)
 {
+     #define SEP '\3'
+     //把网页保存到目标文件中
+     //version1:xxxxxxxx\3xxxxxxxxxxxxxx\3xxxxxxxxxxxx\3
+     //version2:写入文件中要考虑下一次读取的时候，也要方便操作
+     //like：title\3content\3url\n title\3content\3url\3...
+     //方便我们用getline获取数据:title\3content\3url\3
+     //把文件打开
+     ofstream ofs(output,ios::out|ios::binary);//按照二进制方式写入，写入什么，文档是什么
+     if(!ofs.is_open())
+     {
+          cerr<<"open "<<output<<"fail"<<endl;
+          return false;
+     }
+     //进行文件内容的写入了
+     for(const DocInfo_t& doc:result)
+     {
+          string out_string=doc.title;
+          out_string+=SEP;
+          out_string+=doc.content;
+          out_string+=SEP;
+          out_string+=doc.url;
+          out_string+='\n';
+          ofs.write(out_string.c_str(),out_string.size());//写入到文件中
+     }
+     ofs.close();
      return true;
 }
