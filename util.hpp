@@ -5,6 +5,11 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include "cppjieba/include/cppjieba/Jieba.hpp"
+#include"jsoncpp/json/json.h"
+extern ns_index::DocInfo doc;
+
+const std::string src_path = "data/input/";
+const std::string output = "data/raw_html/raw.txt";
 using namespace std;
 // static int n=0;
 namespace ns_util
@@ -57,5 +62,22 @@ namespace ns_util
         const char *const IDF_PATH = "cppjieba/dict/idf.utf8";
         const char *const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
     cppjieba::Jieba JiebaUtil::jieba(DICT_PATH,HMM_PATH,USER_DICT_PATH,IDF_PATH,STOP_WORD_PATH);//构造函数,静态对象属于这个类,但是要放在类外初始化
+    
 
+
+    class JsonUtil
+    {
+        static string ResponseSerialize(const ns_index::DocInfo& doc)
+        {
+            //把服务端构建的响应进行序列化
+            Json::Value root;
+            root["doc_id"]=doc.doc_id;
+            root["title"]=doc.title;
+            root["content"]=doc.content;
+            root["url"]=doc.url;
+            Json::FastWriter writer;
+            string sendwriter =writer.write(root);
+            return sendwriter;
+        }
+    }
 };

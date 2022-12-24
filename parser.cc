@@ -9,8 +9,7 @@
 
 using namespace std;
 // 这里是一个目录，下面就是所有的html的网页
-const std::string src_path = "data/input/";
-const std::string output = "data/raw_html/raw.txt";
+
 
 // 一个文档的信息，就包括标题,内容,url
 struct DocInfo_t

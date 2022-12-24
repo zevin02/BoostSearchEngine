@@ -5,19 +5,18 @@
 #include <unordered_map>
 #include <fstream>
 #include "util.hpp"
-
-
+#include <mutex>
 using namespace std;
 namespace ns_index
 {
-    struct DocInfo
+    struct DocInfo // 正排索引
     {
         string title; // 文档的标题
         string content;
         string url;
         uint64_t doc_id; // 文档的id
     };
-    struct InvertedElem
+    struct InvertedElem // 倒排索引
     {
         string word;
         uint64_t doc_id;
@@ -30,14 +29,33 @@ namespace ns_index
         vector<DocInfo> forward_index; // 正排索引
         // 倒排索引,一个关键字和一组id的索引
         unordered_map<string, vector<InvertedElem>> Inverted_index; // 根据关键字查找到对应的数据
-    public:
         index()
         {
         }
+        index(const index &in) = delete;
+        index &operator=(const index &in) = delete;
+        static index *instance; // 构建单例
+        static mutex mtx;
+
+    public:
         ~index()
         {
         }
         // 根据id找到正排缩影
+        static index *GetInstance()
+        {
+            if (instance == nullptr)//进行双重判断
+            {
+                mtx.lock();
+                // 解决线程安全的问题
+                if (instance == nullptr)
+                {
+                    instance = new index();
+                }
+                mtx.unlock();
+            }
+            return instance;
+        }
         DocInfo *GetForwardIndex(const uint64_t doc_id)
         {
             if (doc_id > forward_index.size())
@@ -87,7 +105,7 @@ namespace ns_index
         }
 
     private:
-        DocInfo *BuildForwardIndex(const string &line, int n)
+        DocInfo *BuildForwardIndex(const string &line, int n) // 构建正排索引
         {
             // 1. 解析line，进行字符串切分
             // 3. 插入到vector中
@@ -108,50 +126,53 @@ namespace ns_index
             forward_index.push_back(move(doc));
             return &forward_index.back();
         }
-        bool BuildInvertedIndex(DocInfo*& doc)
+        bool BuildInvertedIndex(DocInfo *&doc) // 构建到排拉链
         {
             // DocInfo(title,content,url,id)
             // 倒排拉链的映射，根据关键字找最对应的序号，查找拉链
             // 1。根据拿到的数据title/content进行拆分出多个关键字
             // 2.处理相关性，次频,可以知道在文档和标题中，词出现的次数
             // 3.构建相关性
-            struct word_cnt{
+            struct word_cnt
+            {
                 int title_cnt;
                 int content_cnt;
                 word_cnt()
-                :title_cnt(0),content_cnt(0)
-                {}
-            }
-            unordered_map<string,word_cnt> word_map;//用来暂存词频的
-            vector<string> titleword;//
-            ns_util::JiebaUtil::cut(doc.title,titleword)
-            for(string& word:titleworld)
+                    : title_cnt(0), content_cnt(0)
+                {
+                }
+            };
+            unordered_map<string, word_cnt> word_map; // 用来暂存词频的
+            vector<string> titleword;                 //
+            ns_util::JiebaUtil::cut(doc->title, titleword);
+            for (string &word : titleword)
             {
-                boost::to_lower(word);//把分词统一转化成小写
-                word_map[word].title++;
+                boost::to_lower(word); // 把分词统一转化成小写
+                word_map[word].title_cnt++;
             }
-            //同样还要进行内容的词频统计
-            vector<string> contentword;//
-            ns_util::JiebaUtil::cut(doc.content,contentword);
-            for(string& word:content)
+            // 同样还要进行内容的词频统计
+            vector<string> contentword; //
+            ns_util::JiebaUtil::cut(doc->content, contentword);
+            for (string &word : contentword)
             {
-                boost::to_lower(word);//把分词统一转化成小写
-                word_map[word].content++;
+                boost::to_lower(word); // 把分词统一转化成小写
+                word_map[word].content_cnt++;
             }
-            //
-            #define X 10
-            #define Y 1
-            //忽略大小写
-            for(auto word_pair:word_map)
+//
+#define X 10
+#define Y 1
+            // 忽略大小写
+            for (auto word_pair : word_map)
             {
-                InventedElem item;//倒排索引
-                item.doc_id=doc.doc_id;
-                item.word=word_pair.first;
-                item.weight=X*word_pair.second.title_cnt+Y*word_pair.second.content_cnt;//相关性
-                Invented_index[word_pair.first].push_back(item);//把他放进
+                InvertedElem item; // 倒排索引
+                item.doc_id = doc->doc_id;
+                item.word = word_pair.first;
+                item.weight = X * word_pair.second.title_cnt + Y * word_pair.second.content_cnt; // 相关性
+                Inverted_index[word_pair.first].push_back(move(item));                           // 把他放进
             }
-            //统计标题中词出现的次数
+            // 统计标题中词出现的次数
             return true;
         }
     };
+    index *index::instance = nullptr; // 把该index在类外进行初始化
 };
