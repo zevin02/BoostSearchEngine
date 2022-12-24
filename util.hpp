@@ -5,8 +5,7 @@
 #include <vector>
 #include <boost/algorithm/string.hpp>
 #include "cppjieba/include/cppjieba/Jieba.hpp"
-#include"jsoncpp/json/json.h"
-extern ns_index::DocInfo doc;
+#include "jsoncpp/json/json.h"
 
 const std::string src_path = "data/input/";
 const std::string output = "data/raw_html/raw.txt";
@@ -49,35 +48,47 @@ namespace ns_util
     {
 
     private:
-       static cppjieba::Jieba jieba;//构造函数,静态对象属于这个类
+        static cppjieba::Jieba jieba; // 构造函数,静态对象属于这个类
     public:
-        static void cut(const string line,vector<string>& out)//把一个字符床切分成了多个字符串，只有在static里面才能使用这个静态对象
+        static void cut(const string line, vector<string> &out) // 把一个字符床切分成了多个字符串，只有在static里面才能使用这个静态对象
         {
             jieba.CutForSearch(line, out);
         }
     };
-        const char *const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
-        const char *const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
-        const char *const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";
-        const char *const IDF_PATH = "cppjieba/dict/idf.utf8";
-        const char *const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
-    cppjieba::Jieba JiebaUtil::jieba(DICT_PATH,HMM_PATH,USER_DICT_PATH,IDF_PATH,STOP_WORD_PATH);//构造函数,静态对象属于这个类,但是要放在类外初始化
-    
+    const char *const DICT_PATH = "cppjieba/dict/jieba.dict.utf8";
+    const char *const HMM_PATH = "cppjieba/dict/hmm_model.utf8";
+    const char *const USER_DICT_PATH = "cppjieba/dict/user.dict.utf8";
+    const char *const IDF_PATH = "cppjieba/dict/idf.utf8";
+    const char *const STOP_WORD_PATH = "cppjieba/dict/stop_words.utf8";
+    cppjieba::Jieba JiebaUtil::jieba(DICT_PATH, HMM_PATH, USER_DICT_PATH, IDF_PATH, STOP_WORD_PATH); // 构造函数,静态对象属于这个类,但是要放在类外初始化
 
-
+    struct DocInfo // 正排索引
+    {
+        string title; // 文档的标题
+        string content;
+        string url;
+        uint64_t doc_id; // 文档的id
+    };
+    struct InvertedElem // 倒排索引
+    {
+        string word;
+        uint64_t doc_id;
+        int weight; // 权重
+    };
     class JsonUtil
     {
-        static string ResponseSerialize(const ns_index::DocInfo& doc)
+    public:
+        static string ResponseSerialize(const DocInfo *doc)
         {
-            //把服务端构建的响应进行序列化
+            // 把服务端构建的响应进行序列化
             Json::Value root;
-            root["doc_id"]=doc.doc_id;
-            root["title"]=doc.title;
-            root["content"]=doc.content;
-            root["url"]=doc.url;
-            Json::FastWriter writer;
-            string sendwriter =writer.write(root);
+            root["title"] = doc->title;
+
+            root["content"] = GetContent(doc->content);
+            root["url"] = doc->url;
+            Json::StyledWriter writer;
+            string sendwriter = writer.write(root);
             return sendwriter;
         }
-    }
+    };
 };

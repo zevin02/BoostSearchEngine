@@ -9,26 +9,14 @@
 using namespace std;
 namespace ns_index
 {
-    struct DocInfo // 正排索引
-    {
-        string title; // 文档的标题
-        string content;
-        string url;
-        uint64_t doc_id; // 文档的id
-    };
-    struct InvertedElem // 倒排索引
-    {
-        string word;
-        uint64_t doc_id;
-        int weight; // 权重
-    };
+
     class index
     {
         // 正排索引,根据id找文档
     private:
-        vector<DocInfo> forward_index; // 正排索引
+        vector<ns_util::DocInfo> forward_index; // 正排索引
         // 倒排索引,一个关键字和一组id的索引
-        unordered_map<string, vector<InvertedElem>> Inverted_index; // 根据关键字查找到对应的数据
+        unordered_map<string, vector<ns_util::InvertedElem>> Inverted_index; // 根据关键字查找到对应的数据
         index()
         {
         }
@@ -44,7 +32,7 @@ namespace ns_index
         // 根据id找到正排缩影
         static index *GetInstance()
         {
-            if (instance == nullptr)//进行双重判断
+            if (instance == nullptr) // 进行双重判断
             {
                 mtx.lock();
                 // 解决线程安全的问题
@@ -56,7 +44,7 @@ namespace ns_index
             }
             return instance;
         }
-        DocInfo *GetForwardIndex(const uint64_t doc_id)
+        ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id)
         {
             if (doc_id > forward_index.size())
             {
@@ -67,7 +55,7 @@ namespace ns_index
             // return nullptr;
         }
         // 根据关键字找到倒排拉链
-        vector<InvertedElem> *GetInvertedlist(const string &word)
+        vector<ns_util::InvertedElem> *GetInvertedlist(const string &word)
         {
             auto iter = Inverted_index.find(word);
             if (iter == Inverted_index.end())
@@ -92,20 +80,25 @@ namespace ns_index
             int n = 0;
             while (getline(ifs, line))
             {
-                DocInfo *ret = BuildForwardIndex(line, n); // 建立正排索引
+                ns_util::DocInfo *ret = BuildForwardIndex(line, n); // 建立正排索引
                 if (ret == nullptr)
                 {
                     cerr << "build " << line << " error" << endl;
                     continue;
                 }
-                n++;
+
                 BuildInvertedIndex(ret); // 建立倒排索引
+                n++;
+                if (n % 50 == 0)
+                {
+                    cout<<"当前建立的文档:"<<n<<endl;
+                }
             }
             return true;
         }
 
     private:
-        DocInfo *BuildForwardIndex(const string &line, int n) // 构建正排索引
+        ns_util::DocInfo *BuildForwardIndex(const string &line, int n) // 构建正排索引
         {
             // 1. 解析line，进行字符串切分
             // 3. 插入到vector中
@@ -118,7 +111,7 @@ namespace ns_index
                 return nullptr;
             }
             // 2. 字符串填充到docinfo中
-            DocInfo doc;
+            ns_util::DocInfo doc;
             doc.title = ret[0];
             doc.content = ret[1];
             doc.url = ret[2];
@@ -126,7 +119,7 @@ namespace ns_index
             forward_index.push_back(move(doc));
             return &forward_index.back();
         }
-        bool BuildInvertedIndex(DocInfo *&doc) // 构建到排拉链
+        bool BuildInvertedIndex(ns_util::DocInfo *&doc) // 构建到排拉链
         {
             // DocInfo(title,content,url,id)
             // 倒排拉链的映射，根据关键字找最对应的序号，查找拉链
@@ -164,7 +157,7 @@ namespace ns_index
             // 忽略大小写
             for (auto word_pair : word_map)
             {
-                InvertedElem item; // 倒排索引
+                ns_util::InvertedElem item; // 倒排索引
                 item.doc_id = doc->doc_id;
                 item.word = word_pair.first;
                 item.weight = X * word_pair.second.title_cnt + Y * word_pair.second.content_cnt; // 相关性
@@ -175,4 +168,6 @@ namespace ns_index
         }
     };
     index *index::instance = nullptr; // 把该index在类外进行初始化
+    mutex index::mtx;
+
 };
