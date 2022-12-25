@@ -89,10 +89,7 @@ namespace ns_index
 
                 BuildInvertedIndex(ret); // 建立倒排索引
                 n++;
-                if (n % 50 == 0)
-                {
-                    cout<<"当前建立的文档:"<<n<<endl;
-                }
+
             }
             return true;
         }

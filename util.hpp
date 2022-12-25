@@ -43,6 +43,40 @@ namespace ns_util
         {
             boost::split(*out, target, boost::is_any_of(sep), boost::token_compress_on); // 压缩中间的分隔符,把所有的压缩成一个\3
         }
+        static string GetDesc(string content, string word)
+        {
+            // 根据content内容，在里面找第一次出现的word，往前截取50字节(如果没有，就从开头来获得)，往后截取100字节的内容(没有就到end)
+            // 找到首次出现的位置
+            // size_t pos = content.find(word);//我们这里的word是小写，但是content中并不是忽略大小写进行查找的
+            auto iter=search(content.begin(),content.end(),word.begin(),word.end(),[](int x,int y){
+                return tolower(x)==tolower(y);
+            });//忽略成大小写进行查找
+            size_t prev_order = 50;
+            size_t next_order = 100;
+            if (iter == content.end())
+            {
+                cerr << "not find word" << endl;
+                return "NONE1";
+            }
+            else
+            {
+                size_t pos=distance(content.begin(),iter);
+                int start = 0;
+                int end = content.size();
+                if (pos > prev_order)
+                {
+                    start = pos - prev_order;
+                }
+                if (end > pos+next_order)
+                {
+                    end = pos + next_order;
+                }
+                if(end<start)
+                return "NONE2";
+                string substr = content.substr(start, end - start);
+                return substr;
+            }
+        }
     };
     class JiebaUtil
     {
@@ -78,17 +112,20 @@ namespace ns_util
     class JsonUtil
     {
     public:
-        static string ResponseSerialize(const DocInfo *doc)
+        static string ResponseSerialize(const DocInfo *doc, InvertedElem &item)
         {
             // 把服务端构建的响应进行序列化
             Json::Value root;
             root["title"] = doc->title;
 
-            root["content"] = GetContent(doc->content);
+            root["content"] = StringUtil::GetDesc(doc->content, item.word);
             root["url"] = doc->url;
+            root["id"]=(int)doc->doc_id;
+            root["weight"]=item.weight;
             Json::StyledWriter writer;
             string sendwriter = writer.write(root);
             return sendwriter;
         }
     };
+
 };
