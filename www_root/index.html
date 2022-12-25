@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
     <title>Boost Search Engine</title>
     <style>
         /* 去掉网页默认的内外边距 */
@@ -94,10 +95,11 @@
     <div class="container">
         <div class="search">
             <input type="text" value="请输入搜索关键字...">
-            <button>搜索一下</button>
+            <button onclick="Search()">搜索一下</button>
         </div>
         <div class="result">
-            <div class="item">
+            
+            <!-- <div class="item">
                 <a href="#">这个是标题</a>
                 <p>这是摘要</p>
                 <i>https://github.com/</i>
@@ -111,8 +113,43 @@
                 <a href="#">这个是标题</a>
                 <p>这是摘要</p>
                 <i>http://xv6.dgs.zone/tranlate_books/book-riscv-rev1/c1/s0.html</i>
-            </div>
+            </div> -->
         </div>
     </div>
+    <script>
+        function Search()
+        {
+            // 会有一个弹出框架
+            // alert("hello js");
+            //1.提取数据
+            let query=$(".container .search input").val();//获得对应参数
+            console.log("query = "+query);
+            //发起http请求
+            //ajax和后端进行数据交互的函数
+            $.ajax({
+                type:"GET",
+                url:"/s?word="+query,
+                success:function(data)
+                {
+                    //成功之后结果在这
+                    console.log(data);
+                    BuildHtml(data);
+                }
+            });
+
+        }
+        function BuildHtml(data)
+        {
+            // 获取html中的result标签
+            let result_label=$(".container .result");
+            //清空历史搜索结果\
+            result_label.empty();
+            for(let elem of data)
+            {
+                console.log(elem.title);
+                console.log(elem.url);
+            }
+        }
+    </script>
 </body>
 </html>
