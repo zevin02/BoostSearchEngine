@@ -73,7 +73,7 @@ namespace ns_util
                 }
                 if(end<start)
                 return "NONE2";
-                string substr = content.substr(start, end - start);
+                string substr = content.substr(start, end - start)+"...";
                 return substr;
             }
         }
