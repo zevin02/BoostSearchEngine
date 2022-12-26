@@ -1,8 +1,19 @@
 #pragma once
 #include "index.hpp"
 #include <algorithm>
+#include<unordered_set>
 namespace ns_searcher
 {
+    struct DeduplicateNode
+    {
+        uint64_t doc_id;
+        int weight;
+        vector<string> words;
+        DeduplicateNode()
+        :doc_id(0),weight(0)
+        {}
+    };
+
     class Searcher
     {
     private:
@@ -20,9 +31,11 @@ namespace ns_searcher
             // 获取或者构建index对象
             // 根据index对象建立索引
             index = ns_index::index::GetInstance(); // 获得单例对象
-            cout << "获取单例成功......" << endl;
+            // cout << "获取单例成功......" << endl;
+            LOG(NORMAL,"获取单例成功......");
             index->BuildIndex(output);
-            cout << "建立正排和倒排索引成功......." << endl;
+            // cout << "建立正排和倒排索引成功......." << endl;
+            LOG(NORMAL,"建立正排和倒排索引成功.......");
         }
         void Search(const string &query, string &json_string)
         {
@@ -34,7 +47,9 @@ namespace ns_searcher
             ns_util::JiebaUtil::cut(query, queryret);
             // 我们在建立大小写的时候是忽略大小写的，所以也要把关键字左大小写的转化
             //[2]根据分词结果，查找到排拉链
-            vector<ns_util::InvertedElem> invertedlistall; // 把所有的倒排节点汇总在一起
+            // vector<ns_util::InvertedElem> invertedlistall; // 把所有的倒排节点汇总在一起
+            //去重，用map来进行赛选，再放到ector中
+            map<uint64_t,DeduplicateNode> invertednodeall;
             for (string &word : queryret)
             {
                 boost::to_lower(word);
@@ -47,16 +62,31 @@ namespace ns_searcher
                     continue;
                 }
                 // 不完美的地方，不同的关键字可能查出来的文档id是一样的
-                invertedlistall.insert(invertedlistall.end(), list->begin(), list->end()); // 把list中的所有节点插入
+                //我们需要进行去重
+                for(int i=0;i<list->size();i++)
+                {
+                    DeduplicateNode node;
+                    node.doc_id=(*list)[i].doc_id;
+                    node.weight+=(*list)[i].weight;
+                    node.words.push_back((*list)[i].word);
+                    invertednodeall[(*list)[i].doc_id]=node;   //去重
+                }
+                // invertedlistall.insert(invertedlistall.end(), list->begin(), list->end()); // 把list中的所有节点插入
             }
 
+            vector<DeduplicateNode> invertedlistall; // 把所有的倒排节点汇总在一起
+            for(auto pair:invertednodeall)
+            {
+                invertedlistall.push_back(move(pair.second));
+            }
             // 【3】更具获得的拉链，按照weirthg进行排序
-            sort(invertedlistall.begin(), invertedlistall.end(), [](const ns_util::InvertedElem &n1, const ns_util::InvertedElem &n2)
+            sort(invertedlistall.begin(), invertedlistall.end(), [](const DeduplicateNode &n1, const DeduplicateNode &n2)
                  {
                      return n1.weight > n2.weight; // 保持前面大于后面,降序排序
                  });
             // 【4】构建json串
-            for (ns_util::InvertedElem &item : invertedlistall)
+            Json::Value root;
+            for (auto &item : invertedlistall)
             {
                 // 根据当前中的倒排节点获得doc_id,再拿这个doc_id去获得他的正排索
                 ns_util::DocInfo *doc = index->GetForwardIndex(item.doc_id);
@@ -67,13 +97,19 @@ namespace ns_searcher
                 }
                 // 找到了
                 // doc里面就是我们需要的东西了
-                
-                string tmpjsonstr = ns_util::JsonUtil::ResponseSerialize(doc,item);
-                json_string += tmpjsonstr;
+
+                // string tmpjsonstr = ns_util::JsonUtil::ResponseSerialize(doc,item);
+                // json_string += tmpjsonstr;
+                Json::Value elem;
+                elem["title"] = doc->title;
+                elem["content"] = ns_util::StringUtil::GetDesc(doc->content, item.words[0]);
+                elem["url"] = doc->url;
+                root.append(elem);
             }
+            // Json::StyledWriter writer;
+            Json::FastWriter writer;
+            
+            json_string = writer.write(root);
         }
-
-    private:
-
     };
 };

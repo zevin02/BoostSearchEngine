@@ -43,7 +43,7 @@ namespace ns_util
         {
             boost::split(*out, target, boost::is_any_of(sep), boost::token_compress_on); // 压缩中间的分隔符,把所有的压缩成一个\3
         }
-        static string GetDesc(string content, string word)
+        static string GetDesc(string content, string word)//同时要判断第一个单词和最后一个单词是否是一个完整的单词
         {
             // 根据content内容，在里面找第一次出现的word，往前截取50字节(如果没有，就从开头来获得)，往后截取100字节的内容(没有就到end)
             // 找到首次出现的位置
@@ -120,8 +120,8 @@ namespace ns_util
 
             root["content"] = StringUtil::GetDesc(doc->content, item.word);
             root["url"] = doc->url;
-            root["id"]=(int)doc->doc_id;
-            root["weight"]=item.weight;
+            // root["id"]=(int)doc->doc_id;
+            // root["weight"]=item.weight;
             Json::StyledWriter writer;
             string sendwriter = writer.write(root);
             return sendwriter;

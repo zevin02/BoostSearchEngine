@@ -6,6 +6,7 @@
 #include <fstream>
 #include "util.hpp"
 #include <mutex>
+#include"log.hpp"
 using namespace std;
 namespace ns_index
 {
@@ -89,6 +90,10 @@ namespace ns_index
 
                 BuildInvertedIndex(ret); // 建立倒排索引
                 n++;
+                if(n%50==0)
+                {
+                    LOG(NORMAL,"当前已经建立的索引文档:"+to_string(n));
+                }
 
             }
             return true;
