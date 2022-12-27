@@ -1,5 +1,5 @@
 .PHONY:all
-all: parser debug http_server 
+all: parser  http_server 
 
 SLFLAG=-ljsoncpp  -lboost_filesystem -lboost_system -lpthread -lmysqlclient 
 PLFLAG=-lboost_system -lboost_filesystem 

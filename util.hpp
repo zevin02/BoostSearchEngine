@@ -8,7 +8,6 @@
 #include "jsoncpp/json/json.h"
 #include "spdlog/spdlog.h"
 
-
 const std::string src_path = "data/input/";
 const std::string output = "data/raw_html/raw.txt";
 using namespace std;
@@ -18,20 +17,22 @@ namespace ns_util
     class FileUtil
     {
     public:
-        static bool ReadFile(const std::string &file_path, std::string *out)
+        static bool ReadFile(const std::string &file_path, std::string &filetext)
         {
-            
+
             ifstream in(file_path, ios::in);
             // 打开一个文件
             if (!in.is_open()) // 打开成功
             {
-                cerr << "open file " << file_path << " fail" << endl;
+                spdlog::info("open {} fail", file_path);
                 return false;
             }
+            spdlog::info("open {} success", file_path);
+
             string line;
             while (getline(in, line)) // 按行读取in中的文件
             {
-                *out += line;
+                filetext += line;
             }
 
             in.close(); // 关闭文件
@@ -45,14 +46,13 @@ namespace ns_util
         {
             boost::split(*out, target, boost::is_any_of(sep), boost::token_compress_on); // 压缩中间的分隔符,把所有的压缩成一个\3
         }
-        static string GetDesc(string content, string word)//同时要判断第一个单词和最后一个单词是否是一个完整的单词
+        static string GetDesc(string content, string word) // 同时要判断第一个单词和最后一个单词是否是一个完整的单词
         {
             // 根据content内容，在里面找第一次出现的word，往前截取50字节(如果没有，就从开头来获得)，往后截取100字节的内容(没有就到end)
             // 找到首次出现的位置
             // size_t pos = content.find(word);//我们这里的word是小写，但是content中并不是忽略大小写进行查找的
-            auto iter=search(content.begin(),content.end(),word.begin(),word.end(),[](int x,int y){
-                return tolower(x)==tolower(y);
-            });//忽略成大小写进行查找
+            auto iter = search(content.begin(), content.end(), word.begin(), word.end(), [](int x, int y)
+                               { return tolower(x) == tolower(y); }); // 忽略成大小写进行查找
             size_t prev_order = 50;
             size_t next_order = 100;
             if (iter == content.end())
@@ -62,20 +62,20 @@ namespace ns_util
             }
             else
             {
-                size_t pos=distance(content.begin(),iter);
+                size_t pos = distance(content.begin(), iter);
                 int start = 0;
                 int end = content.size();
                 if (pos > prev_order)
                 {
                     start = pos - prev_order;
                 }
-                if (end > pos+next_order)
+                if (end > pos + next_order)
                 {
                     end = pos + next_order;
                 }
-                if(end<start)
-                return "NONE2";
-                string substr = content.substr(start, end - start)+"...";
+                if (end < start)
+                    return "NONE2";
+                string substr = content.substr(start, end - start) + "...";
                 return substr;
             }
         }

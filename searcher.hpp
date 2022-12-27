@@ -36,7 +36,7 @@ namespace ns_searcher
             index = ns_index::index::GetInstance(); // 获得单例对象
             // cout << "获取单例成功......" << endl;
             spdlog::info("GetInstance() ok");
-            
+
             // LOG(NORMAL, "获取单例成功......");
             spdlog::info("BuildIndex() start");
             index->BuildIndex(output);
@@ -103,9 +103,9 @@ namespace ns_searcher
             for (auto &item : invertedlistall)
             {
                 // 根据当前中的倒排节点获得doc_id,再拿这个doc_id去获得他的正排索
-                spdlog::info("GetForwardIndex() start");
+                // spdlog::info("GetForwardIndex() start");
                 ns_util::DocInfo *doc = index->GetForwardIndex(item.doc_id);
-                spdlog::info("GetForwardIndex() ret");
+                // spdlog::info("GetForwardIndex() ret");
 
                 if (doc == nullptr)
                 {
@@ -115,7 +115,7 @@ namespace ns_searcher
                 }
                 // 找到了
                 // doc里面就是我们需要的东西了
-                spdlog::info("GetForwardIndex() doc_id={} find its doc", item.doc_id);
+                // spdlog::info("GetForwardIndex() doc_id={} find its doc", item.doc_id);
 
                 // string tmpjsonstr = ns_util::JsonUtil::ResponseSerialize(doc,item);
                 // json_string += tmpjsonstr;

@@ -35,14 +35,17 @@ namespace ns_index
         {
             if (instance == nullptr) // 进行双重判断
             {
-                mtx.lock();
+                // mtx.lock();
+                spdlog::debug("unique_lock start");
+                unique_lock<mutex> lock(mtx);
                 // 解决线程安全的问题
                 if (instance == nullptr)
                 {
                     instance = new index();
                 }
-                mtx.unlock();
+                // mtx.unlock();
             }
+            spdlog::info("GetInstance success");
             return instance;
         }
         ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id)
