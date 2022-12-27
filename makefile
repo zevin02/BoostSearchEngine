@@ -9,13 +9,13 @@ cc=g++
 
 
 http_server:http_server.cc
-	$(cc) $< -o $@  $(SLFLAG) $(CFLAG) -g  
+	$(cc) $< -o $@  $(SLFLAG) $(CFLAG) $(HFLAG) -g  
 
 parser:parser.cc
-	$(cc) $< -o $@ $(PLFLAG) $(CFLAG) -g
+	$(cc) $< -o $@ $(PLFLAG) $(CFLAG) $(HFLAG) -g
 
 debug:debug.cc
-	$(cc) $< -o $@ $(HFLAG) $(SLFLAG) $(CFLAG) -g
+	$(cc) $< -o $@ $(CFLAG) $(HFLAG) $(SLFLAG)  -g
 
 .PHONY:clean
 clean:	

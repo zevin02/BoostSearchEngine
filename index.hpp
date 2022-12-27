@@ -71,12 +71,16 @@ namespace ns_index
         {
             // 把parse处理完的数据交过来
             // 根据去标签之后的文档构建正派和倒排索引
+            spdlog::info("BuildIndex() called with parameters =>{}",html_path);
             ifstream ifs(html_path, ios::in | ios::binary);
             if (!ifs.is_open())
             {
-                cerr << "open " << html_path << " fail" << endl;
+                spdlog::info("open {} file fail",html_path);
+                // cerr << "open " << html_path << " fail" << endl;
                 return false;
             }
+            spdlog::info("open {} file success",html_path);
+
             string line;
             int n = 0;
             while (getline(ifs, line))
@@ -84,17 +88,15 @@ namespace ns_index
                 ns_util::DocInfo *ret = BuildForwardIndex(line, n); // 建立正排索引
                 if (ret == nullptr)
                 {
-                    cerr << "build " << line << " error" << endl;
+                    spdlog::info("BuildForwardIndex {} error",line);
+                    // cerr << "build " << line << " error" << endl;
                     continue;
                 }
-
+                // spdlog::info("BuildForwardIndex {} success");
+                
                 BuildInvertedIndex(ret); // 建立倒排索引
-                n++;
-                if(n%50==0)
-                {
-                    LOG(NORMAL,"当前已经建立的索引文档:"+to_string(n));
-                }
 
+                n++;
             }
             return true;
         }

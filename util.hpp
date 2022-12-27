@@ -6,6 +6,8 @@
 #include <boost/algorithm/string.hpp>
 #include "cppjieba/include/cppjieba/Jieba.hpp"
 #include "jsoncpp/json/json.h"
+#include "spdlog/spdlog.h"
+
 
 const std::string src_path = "data/input/";
 const std::string output = "data/raw_html/raw.txt";
@@ -18,7 +20,7 @@ namespace ns_util
     public:
         static bool ReadFile(const std::string &file_path, std::string *out)
         {
-
+            
             ifstream in(file_path, ios::in);
             // 打开一个文件
             if (!in.is_open()) // 打开成功
