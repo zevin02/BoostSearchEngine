@@ -6,7 +6,7 @@
 #include "util.hpp"
 
 using namespace std;
-
+#define SEP '\3'
 struct DocInfo
 {
      string title;   // 网页中的标题
@@ -72,7 +72,7 @@ static bool ParseTitle(const string &result, string *title) // 静态函数不�
      return true;
 }
 
-static bool ParseContent(string file, string *content) // 解析文档
+static bool ParseContent(string filetext, string *content) // 解析文档
 {
      // 把整个文档中的双标签都要去掉，在标签内的都去掉,我们要基于一个简易的状态机器来编写
      enum status
@@ -82,12 +82,14 @@ static bool ParseContent(string file, string *content) // 解析文档
      };
      enum status s = LABEL;
      // 解析content的时候，还要排除多添加了title
-     size_t start = file.find("</title>");
+     size_t start = filetext.find("</title>");
      start += strlen("</title>");
-     file = file.substr(start, file.size() - start); // 去除了标题
+     filetext = filetext.substr(start, filetext.size() - start); // 去除了标题
 
-     for (char c : file)
+     // for (char c : filetext)
+     for (int i = 0; i < filetext.size(); i++)
      {
+          char c = filetext[i];
           // 在进行遍历的时候，只要碰到了>,就意味着，当前的标签都被处理完成了
           // 遇到一个<,说明content读取完成
           switch (s)
@@ -98,6 +100,7 @@ static bool ParseContent(string file, string *content) // 解析文档
 
                break;
           case CONTENT:
+               // 这个地方如果他是<stdio>,这个的话也被我们处理了
                if (c == '<')
                {
                     s = LABEL;
@@ -107,6 +110,28 @@ static bool ParseContent(string file, string *content) // 解析文档
                {
                     // 此时是读取内容
                     // 我们不想保留原始文件中的\n,因为我们想用\n,作文html文本的分隔符
+                    // 这里我们还要判断如果&lt,就要转化成<
+                    //&gt要转化成>
+                    if (c == '&')
+                    {
+                         if (filetext[i + 1] == 'l')
+                         {
+                              if (filetext[i + 2] == 't')
+                              {
+                                   c='<';
+                                   i += 3;
+                              }
+                         }
+                         if (filetext[i + 1] == 'g')
+                         {
+                              if (filetext[i + 2] == 't')
+                              {
+                                   c='>';
+                                   i += 3;
+                              }
+                         }
+                    }
+
                     if (c == '\n')
                          c = ' '; // 设置成一个字符
                     content->push_back(c);
@@ -179,7 +204,7 @@ bool ExtractElem(const vector<string> &files_list, vector<DocInfo> &ElemList)
 
 bool SaveToFile(const vector<DocInfo> &result, const string &output)
 {
-#define SEP '\3'
+
      // 把网页保存到目标文件中
      // version1:xxxxxxxx\3xxxxxxxxxxxxxx\3xxxxxxxxxxxx\3
      // version2:写入文件中要考虑下一次读取的时候，也要方便操作
@@ -189,9 +214,12 @@ bool SaveToFile(const vector<DocInfo> &result, const string &output)
      ofstream ofs(output, ios::out | ios::binary); // 按照二进制方式写入，写入什么，文档是什么
      if (!ofs.is_open())
      {
-          cerr << "open " << output << "fail" << endl;
+          // cerr << "open " << output << "fail" << endl;
+          spdlog::info("savetofile open file {} fail", output);
           return false;
      }
+     spdlog::info("savetofile open file {} success", output);
+
      // 进行文件内容的写入了
      for (const DocInfo &doc : result)
      {
