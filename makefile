@@ -1,14 +1,22 @@
 .PHONY:all
 all: parser debug http_server 
 
+SLFLAG=-ljsoncpp  -lboost_filesystem -lboost_system -lpthread -lmysqlclient 
+PLFLAG=-lboost_system -lboost_filesystem 
+CFLAG=-std=c++11
+HFLAG=-I ./spdlog/include
+cc=g++
+
+
 http_server:http_server.cc
-	g++ http_server.cc -o http_server -ljsoncpp -std=c++11 -lboost_filesystem -lboost_system -lpthread -g
+	$(cc) $< -o $@  $(SLFLAG) $(CFLAG) -g  
 
 parser:parser.cc
-	g++ parser.cc -o parser -std=c++11 -lboost_system -lboost_filesystem -g
+	$(cc) $< -o $@ $(PLFLAG) $(CFLAG) -g
 
 debug:debug.cc
-	g++ debug.cc -o debug -ljsoncpp -std=c++11 -lboost_filesystem -lboost_system -g
+	$(cc) $< -o $@ $(HFLAG) $(SLFLAG) $(CFLAG) -g
+
 .PHONY:clean
 clean:	
 	rm -f parser debug http_server
