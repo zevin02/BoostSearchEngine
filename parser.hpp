@@ -68,7 +68,12 @@ static bool ParseTitle(const string &result, string *title) // 静态函数不�
           return false;
      }
      *title = result.substr(begin, end - begin); // 从begin开始提取，提取end-begin这么多数据
+     // 清理html的转义字符
 
+     if (size_t pos = title->find("&") != string::npos)
+     {
+          ns_util::StringUtil::escapetitle(*title);
+     }
      return true;
 }
 
@@ -86,7 +91,6 @@ static bool ParseContent(string filetext, string *content) // 解析文档
      start += strlen("</title>");
      filetext = filetext.substr(start, filetext.size() - start); // 去除了标题
 
-     // for (char c : filetext)
      for (int i = 0; i < filetext.size(); i++)
      {
           char c = filetext[i];
@@ -112,29 +116,16 @@ static bool ParseContent(string filetext, string *content) // 解析文档
                     // 我们不想保留原始文件中的\n,因为我们想用\n,作文html文本的分隔符
                     // 这里我们还要判断如果&lt,就要转化成<
                     //&gt要转化成>
+
                     if (c == '&')
                     {
-                         if (filetext[i + 1] == 'l')
-                         {
-                              if (filetext[i + 2] == 't')
-                              {
-                                   c='<';
-                                   i += 3;
-                              }
-                         }
-                         if (filetext[i + 1] == 'g')
-                         {
-                              if (filetext[i + 2] == 't')
-                              {
-                                   c='>';
-                                   i += 3;
-                              }
-                         }
+
+                         ns_util::StringUtil::escapecontent(filetext, i, c);
                     }
 
                     if (c == '\n')
                          c = ' '; // 设置成一个字符
-                    content->push_back(c);
+                    content->push_back(move(c));
                }
                break;
           default:

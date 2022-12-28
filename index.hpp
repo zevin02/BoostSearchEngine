@@ -48,11 +48,12 @@ namespace ns_index
             spdlog::info("GetInstance success");
             return instance;
         }
-        ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id)
+        ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id)//根据id获得对应的数据
         {
             if (doc_id > forward_index.size())
             {
-                cerr << "doc_id out range,error!" << endl;
+                // cerr << "doc_id out range,error!" << endl;
+                spdlog::info("doc_id out range,error!");
                 return nullptr;
             }
             return &forward_index[doc_id];
@@ -159,7 +160,7 @@ namespace ns_index
                 word_map[word].content_cnt++;
             }
 //
-#define X 10
+#define X 100
 #define Y 1
             // 忽略大小写
             for (auto word_pair : word_map)

@@ -53,11 +53,12 @@ namespace ns_util
             // size_t pos = content.find(word);//我们这里的word是小写，但是content中并不是忽略大小写进行查找的
             auto iter = search(content.begin(), content.end(), word.begin(), word.end(), [](int x, int y)
                                { return tolower(x) == tolower(y); }); // 忽略成大小写进行查找
-            size_t prev_order = 50;
-            size_t next_order = 100;
+            size_t prev_order = 100;
+            size_t next_order = 150;
             if (iter == content.end())
             {
-                cerr << "not find word" << endl;
+                // cerr << "not find word" << endl;
+                spdlog::info("not find keyword {}", word);
                 return "NONE1";
             }
             else
@@ -74,12 +75,66 @@ namespace ns_util
                     end = pos + next_order;
                 }
                 if (end < start)
+                {
+                    spdlog::info("getdesc() end<start");
                     return "NONE2";
-                string substr = content.substr(start, end - start) + "...";
-                return substr;
+                }
+                string substr = content.substr(start, end - start);
+                // 从substr中找到第一个空格
+                size_t forwardblank = substr.find(" "); // 从前面找，还要从后面找
+                size_t invertedblank = substr.rfind(" ");
+                if (forwardblank == string::npos || invertedblank == string::npos)
+                {
+                    return substr + "...";
+                }
+                else
+                {
+                    substr = substr.substr(forwardblank + 1, invertedblank - forwardblank - 1) + "...";
+                    return substr;
+                }
+            }
+        }
+        static void escapecontent(string &filetext, int &i, char &c) // 转义content
+        {
+            if (filetext[i + 1] == 'l' && filetext[i + 2] == 't')
+            {
+                c = '<';
+                i += 3;
+            }
+            else if (filetext[i + 1] == 'g' && filetext[i + 2] == 't') // 判断&gt,>转义的
+            {
+
+                c = '>';
+                i += 3;
+            }
+            else if (filetext[i + 1] == 'a' && filetext[i + 2] == 'm' && filetext[i + 3] == 'p') // 清理&amp；因为html给转义
+            {
+                i += 4;
+            }
+        }
+        static void replace_all(std::string &dst_str, std::string sub_str, std::string new_str) // replace all string
+        {
+
+            boost::algorithm::replace_all(dst_str, sub_str,new_str);
+        }
+        // static
+        static void escapetitle(string &filetext) // 转义title
+        {
+            if (filetext.find("&gt;") != string::npos)
+            {
+                replace_all(filetext, "&gt;", ">");
+            }
+            if (filetext.find("&lt;") != string::npos)
+            {
+                replace_all(filetext, "&lt;", "<");
+            }
+            if (filetext.find("&amp;") != string::npos)
+            {
+                replace_all(filetext, "&amp;", "&");
             }
         }
     };
+
     class JiebaUtil
     {
 
