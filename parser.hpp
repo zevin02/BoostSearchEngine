@@ -20,7 +20,8 @@ bool CollectHtmlFile(const string &src_path, vector<string> &container)
      fs::path root_path(src_path);     // 定义一个path对象，遍历就从这个路径开始
      if (!fs::exists(root_path))       // 判断给定路径是否存在
      {
-          cerr << src_path << "not exists" << endl; // 路径不存在
+          // cerr << src_path << "not exists" << endl; // 路径不存在
+          spdlog::info("{} not exists",src_path);
           return false;
      }
      // 定义一个空的递归迭代器,用来进行判断递归结束
@@ -119,7 +120,7 @@ static bool ParseContent(string filetext, string *content) // 解析文档
 
                     if (c == '&')
                     {
-
+                         //；处理content中的html转义字符
                          ns_util::StringUtil::escapecontent(filetext, i, c);
                     }
 
@@ -146,8 +147,11 @@ static bool ParseUrl(string file, string *url)
      // url_head=https://www.boost.org/doc/libs/1_80_0/doc/html
      // url_tail=/accumulators.html
      // url=url_head+url_tail,这样就形成了一个官网链接
-     string url_head = "https://www.boost.org/doc/libs/1_80_0/doc/html"; // 内置的官网链接
-     file.erase(0, strlen("data/input"));
+     //之后可以弄一个boost全部公网的
+     // string url_head = "https://www.boost.org/doc/libs/1_80_0/doc/html"; // 内置的官网链接
+     string url_head="https://www.boost.org/doc/libs/1_80_0";
+     // file.erase(0, strlen("data/input"));
+     file.erase(0, strlen("/home/zevin/boost_1_80_0"));
      url_head += file;
      *url = url_head;
 

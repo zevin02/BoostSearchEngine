@@ -8,7 +8,8 @@
 #include "jsoncpp/json/json.h"
 #include "spdlog/spdlog.h"
 
-const std::string src_path = "data/input/";
+const std::string src_path = "/home/zevin/boost_1_80_0/";
+// const std::string src_path = "data/input/";
 const std::string output = "data/raw_html/raw.txt";
 using namespace std;
 // static int n=0;
