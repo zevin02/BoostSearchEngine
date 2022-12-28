@@ -6,7 +6,7 @@
 #include <fstream>
 #include "util.hpp"
 #include <mutex>
-#include"log.hpp"
+#include "log.hpp"
 using namespace std;
 namespace ns_index
 {
@@ -48,7 +48,7 @@ namespace ns_index
             spdlog::info("GetInstance success");
             return instance;
         }
-        ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id)//根据id获得对应的数据
+        ns_util::DocInfo *GetForwardIndex(const uint64_t doc_id) // 根据id获得对应的数据
         {
             if (doc_id > forward_index.size())
             {
@@ -65,7 +65,8 @@ namespace ns_index
             auto iter = Inverted_index.find(word);
             if (iter == Inverted_index.end())
             {
-                cerr << word << " have no InvertList" << endl;
+                // cerr << word << " have no InvertList" << endl;
+                XLOG(ERROR) << word << " have no invertlist"; //
                 return nullptr;
             }
             return &(iter->second);
@@ -75,15 +76,15 @@ namespace ns_index
         {
             // 把parse处理完的数据交过来
             // 根据去标签之后的文档构建正派和倒排索引
-            spdlog::info("BuildIndex() called with parameters =>{}",html_path);
+            spdlog::info("BuildIndex() called with parameters =>{}", html_path);
             ifstream ifs(html_path, ios::in | ios::binary);
             if (!ifs.is_open())
             {
-                spdlog::info("open {} file fail",html_path);
+                spdlog::info("open {} file fail", html_path);
                 // cerr << "open " << html_path << " fail" << endl;
                 return false;
             }
-            spdlog::info("open {} file success",html_path);
+            spdlog::info("open {} file success", html_path);
 
             string line;
             int n = 0;
@@ -92,12 +93,12 @@ namespace ns_index
                 ns_util::DocInfo *ret = BuildForwardIndex(line, n); // 建立正排索引
                 if (ret == nullptr)
                 {
-                    spdlog::info("BuildForwardIndex {} error",line);
+                    spdlog::info("BuildForwardIndex {} error", line);
                     // cerr << "build " << line << " error" << endl;
                     continue;
                 }
                 // spdlog::info("BuildForwardIndex {} success");
-                
+
                 BuildInvertedIndex(ret); // 建立倒排索引
 
                 n++;
@@ -116,6 +117,7 @@ namespace ns_index
             if (ret.size() != 3)
             {
                 cerr << "cut error" << endl;
+                XLOG(ERROR) << "cur error";
                 return nullptr;
             }
             // 2. 字符串填充到docinfo中
@@ -127,7 +129,7 @@ namespace ns_index
             forward_index.push_back(move(doc));
             return &forward_index.back();
         }
-        bool BuildInvertedIndex(ns_util::DocInfo *&doc) // 构建到排拉链
+        bool BuildInvertedIndex(ns_util::DocInfo *&doc) // 构建倒排拉链
         {
             // DocInfo(title,content,url,id)
             // 倒排拉链的映射，根据关键字找最对应的序号，查找拉链
@@ -136,7 +138,7 @@ namespace ns_index
             // 3.构建相关性
             struct word_cnt
             {
-                int title_cnt;
+                int title_cnt; // 标题的相关性
                 int content_cnt;
                 word_cnt()
                     : title_cnt(0), content_cnt(0)
@@ -144,10 +146,16 @@ namespace ns_index
                 }
             };
             unordered_map<string, word_cnt> word_map; // 用来暂存词频的
-            vector<string> titleword;                 //
-            ns_util::JiebaUtil::cut(doc->title, titleword);
+            vector<string> titleword;                 // title分词的结果
+
+            ns_util::JiebaUtil::cut(doc->title, titleword); // 分词,在分词的时候，我们不保留" "
+
             for (string &word : titleword)
             {
+                if (word == " ")
+                {
+                    continue;
+                }
                 boost::to_lower(word); // 把分词统一转化成小写
                 word_map[word].title_cnt++;
             }
@@ -156,7 +164,12 @@ namespace ns_index
             ns_util::JiebaUtil::cut(doc->content, contentword);
             for (string &word : contentword)
             {
+                if (word == " ")
+                {
+                    continue;
+                }
                 boost::to_lower(word); // 把分词统一转化成小写
+
                 word_map[word].content_cnt++;
             }
 //

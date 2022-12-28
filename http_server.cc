@@ -29,7 +29,7 @@ int main()
         // cout<<"用户在搜索使用的关键字->"<<word<<endl;
         // LOG(NORMAL,"用户在搜索使用的关键字->"+word);
     
-        spdlog::info("用户输入的关键字 {}",word);
+        spdlog::info("用户输入的关键字 {}",word);//
         string json_string;
         searcher->Search(word,json_string);
         // searcher->Search(word,json_string);

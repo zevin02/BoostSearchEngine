@@ -62,6 +62,10 @@ namespace ns_searcher
             map<uint64_t, DeduplicateNode> invertednodeall;
             for (string &word : queryret)
             {
+                if(word==" ")
+                {
+                    continue;
+                }
                 boost::to_lower(word);
                 // 这个地方获得了关键字，就要获得对应的倒排拉链
                 spdlog::info("GetInvertedlist() start");
@@ -79,11 +83,12 @@ namespace ns_searcher
                 spdlog::info("GetInvertedlist() {} has list", word);
                 for (int i = 0; i < list->size(); i++)
                 {
-                    DeduplicateNode node;
+                    DeduplicateNode& node=invertednodeall[(*list)[i].doc_id];//先获得对应的数据如果没有的话，会开辟,这个node直接解释别名，对他的修改就是对map的修改
+
                     node.doc_id = (*list)[i].doc_id;
-                    node.weight += (*list)[i].weight;
+                    node.weight += (*list)[i].weight;//这个地方每次进来weitht都是0
                     node.words.push_back((*list)[i].word);
-                    invertednodeall[(*list)[i].doc_id] = node; // 去重
+                    // invertednodeall[(*list)[i].doc_id] = node; // 去重,这不是就会修改掉?
                 }
                 // invertedlistall.insert(invertedlistall.end(), list->begin(), list->end()); // 把list中的所有节点插入
             }
@@ -117,12 +122,11 @@ namespace ns_searcher
                 // doc里面就是我们需要的东西了
                 // spdlog::info("GetForwardIndex() doc_id={} find its doc", item.doc_id);
 
-                // string tmpjsonstr = ns_util::JsonUtil::ResponseSerialize(doc,item);
-                // json_string += tmpjsonstr;
                 Json::Value elem;
                 elem["title"] = doc->title;
-                elem["content"] = ns_util::StringUtil::GetDesc(doc->content, item.words[0]);
+                elem["content"] = ns_util::StringUtil::GetDesc(doc->content, item.words[0]);//找不到可能是因为我把
                 elem["url"] = doc->url;
+                
                 root.append(elem);
             }
             // Json::StyledWriter writer;

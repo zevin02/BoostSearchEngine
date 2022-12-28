@@ -47,7 +47,7 @@ namespace ns_util
         {
             boost::split(*out, target, boost::is_any_of(sep), boost::token_compress_on); // 压缩中间的分隔符,把所有的压缩成一个\3
         }
-        static string GetDesc(string content, string word) // 同时要判断第一个单词和最后一个单词是否是一个完整的单词
+        static string GetDesc(string content,string word) // 同时要判断第一个单词和最后一个单词是否是一个完整的单词
         {
             // 根据content内容，在里面找第一次出现的word，往前截取50字节(如果没有，就从开头来获得)，往后截取100字节的内容(没有就到end)
             // 找到首次出现的位置
@@ -59,8 +59,10 @@ namespace ns_util
             if (iter == content.end())
             {
                 // cerr << "not find word" << endl;
-                spdlog::info("not find keyword {}", word);
-                return "NONE1";
+                // spdlog::info("not find keyword {}", word);
+                // XLOG(ERROR)<<"Not Find Key Word: "<<word;//这个是出现在标题中，而没有在内容中
+                // XLOG(ERROR)<<title;
+                return content.substr(0,200);
             }
             else
             {
@@ -95,6 +97,7 @@ namespace ns_util
                 }
             }
         }
+        
         static void escapecontent(string &filetext, int &i, char &c) // 转义content
         {
             if (filetext[i + 1] == 'l' && filetext[i + 2] == 't')
@@ -112,11 +115,16 @@ namespace ns_util
             {
                 i += 4;
             }
+            else if (filetext[i + 1] == 'n' && filetext[i + 2] == 'b' && filetext[i + 3] == 's' && filetext[i + 4] == 'p') //
+            {
+                c = ' ';
+                i += 5;
+            }
         }
         static void replace_all(std::string &dst_str, std::string sub_str, std::string new_str) // replace all string
         {
 
-            boost::algorithm::replace_all(dst_str, sub_str,new_str);
+            boost::algorithm::replace_all(dst_str, sub_str, new_str);
         }
         // static
         static void escapetitle(string &filetext) // 转义title
@@ -132,6 +140,10 @@ namespace ns_util
             if (filetext.find("&amp;") != string::npos)
             {
                 replace_all(filetext, "&amp;", "&");
+            }
+            if (filetext.find("&nbsp;") != string::npos)
+            {
+                replace_all(filetext, "&nbsp;", " ");
             }
         }
     };
@@ -176,7 +188,7 @@ namespace ns_util
             Json::Value root;
             root["title"] = doc->title;
 
-            root["content"] = StringUtil::GetDesc(doc->content, item.word);
+            // root["content"] = StringUtil::GetDesc(doc->content, item.word);
             root["url"] = doc->url;
             // root["id"]=(int)doc->doc_id;
             // root["weight"]=item.weight;
