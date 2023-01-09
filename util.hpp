@@ -4,7 +4,8 @@
 #include <fstream>
 #include <vector>
 #include <boost/algorithm/string.hpp>
-#include "cppjieba/include/cppjieba/Jieba.hpp"
+// #include "cppjieba/include/cppjieba/Jieba.hpp"
+#include "include/cppjieba/Jieba.hpp"
 #include "jsoncpp/json/json.h"
 #include "spdlog/spdlog.h"
 
