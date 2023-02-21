@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+
+data/input/*
+xv6-labs-2022.code-workspace
